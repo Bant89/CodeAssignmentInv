@@ -1,8 +1,10 @@
 import React, { useState, FormEvent } from 'react'
 
-import { BASE_URL, API_KEY, CITY_ENDPOINT, ZIP_ENDPOINT } from './utils/index'
-import { StateElement, ElementType } from './utils/types'
-import { sanitizeInput } from './logic'
+import { Card } from '../Card'
+import { BASE_URL, API_KEY, CITY_ENDPOINT, ZIP_ENDPOINT } from '../../utils/index'
+import { StateElement, ElementType } from '../../utils/types'
+import { sanitizeInput } from '../../logic'
+import './styles.css'
 
 export const Main = () => {
   const [input, setInput] = useState('')
@@ -20,12 +22,22 @@ export const Main = () => {
     fetch(URL)
       .then(res => {
         if(!res.ok) {
-          setErrors(state => [...state, {...element, type: ElementType.ApiError, data: res }])
+          setErrors(state => [...state, {...element, type: ElementType.ApiError, data: {
+            status: res.status,
+            statusText: res.statusText
+          } }])
           throw new Error(res.statusText)
         }
         return res.json()
       })
-      .then(data => setResponses(state => [...state, { ...element, data }]))
+      .then(data => {
+        setResponses(state => [...state, { ...element, data: {
+          weather: data.weather,
+          dt: data.dt,
+          name: data.name,
+          cod: data.cod
+        } }])
+      })
       .catch(error => {
         console.error(error)
       })
@@ -48,10 +60,14 @@ export const Main = () => {
   }
 
   return(
-    <main>
-      <label htmlFor="input">Input:</label>
-      <input type="text" onChange={handleChange} placeholder="Los Angeles, 10045, Rio de Janeiro" value={input}/> <br />
-      <button onClick={handleClick}>Get Weathers</button>
-    </main>
+    <>
+      <main>
+        <label htmlFor="input">Input:</label>
+        <input type="text" onChange={handleChange} placeholder="Los Angeles, 10045" value={input}/> <br />
+        <button onClick={handleClick}>Get Weathers</button>
+        {errors && errors.map(err => <Card {...err} />)}
+        {responses && responses.map(response => <Card {...response} />)}
+      </main>
+    </>
   )
 }

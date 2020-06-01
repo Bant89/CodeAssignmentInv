@@ -1,0 +1,28 @@
+label {
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+  letter-spacing: 0.25em;
+}
+
+input {
+  margin-top: 1.5em;
+  background-color: transparent;
+  border: none;
+  border-bottom: 2px solid white;
+  color: white;
+  width: auto;
+  font-size: 1.5em;
+}
+
+button {
+  margin: 2.5em 0;
+  background-color: transparent;
+  border: 2px solid white;
+  text-transform: uppercase;
+  color: white;
+  padding: 0.5em;
+}
+
+button:hover {
+  cursor: pointer;
+}

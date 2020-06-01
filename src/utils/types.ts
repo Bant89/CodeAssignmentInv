@@ -1,8 +1,27 @@
 
 export type StateElement = {
   value: string
-  data: object
+  data: {} & ApiResponse & ApiErrorResponse
   type: ElementType
+}
+
+export type ApiResponse = {
+  weather?: Array<WeatherType>
+  dt?: number
+  name?: string
+  cod?: number
+}
+
+export type ApiErrorResponse = {
+  status?: number
+  statusText?: string
+}
+
+export type WeatherType = {
+  id: number
+  main: string
+  description: string
+  icon: string
 }
 
 export enum ElementType {

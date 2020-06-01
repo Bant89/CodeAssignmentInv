@@ -1,0 +1,25 @@
+.card {
+  font-size: 1.2em;
+  color: white;
+  border-radius: 0.25em;
+  word-wrap: break-word;
+  padding: 15px 1.5em;
+  text-align: left;
+  margin-bottom: 1em;
+}
+
+.card--error {
+  background-color: red;
+}
+
+.card--success {
+  background-color: #30e657;
+}
+
+p {
+  width: auto;
+}
+
+h3 {
+  margin: 0;
+}
