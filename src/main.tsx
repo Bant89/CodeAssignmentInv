@@ -1,6 +1,6 @@
 import React, { useState, FormEvent } from 'react'
 
-import { BASE_URL, API_KEY } from './utils/index'
+import { BASE_URL, API_KEY, CITY_ENDPOINT, ZIP_ENDPOINT } from './utils/index'
 import { StateElement, ElementType } from './utils/types'
 
 export const Main = () => {
@@ -13,10 +13,21 @@ export const Main = () => {
   }
 
   const makeRequest = (element: StateElement) => {
-    fetch(`${BASE_URL}${element.value}${API_KEY}`)
-      .then(res => res.json())
+    let URL = '';
+    if(element.type === ElementType.City) URL = `${BASE_URL}${CITY_ENDPOINT}${element.value}${API_KEY}`
+    else URL = `${BASE_URL}${ZIP_ENDPOINT}${element.value}${API_KEY}`
+    fetch(URL)
+      .then(res => {
+        if(!res.ok) {
+          setErrors(state => [...state, {...element, type: ElementType.ApiError, data: res }])
+          throw new Error(res.statusText)
+        }
+        return res.json()
+      })
       .then(data => setResponses(state => [...state, { ...element, data }]))
-      .catch(error => console.error(error))
+      .catch(error => {
+        console.error(error)
+      })
   }
 
   const handleClick = () => {
@@ -42,6 +53,38 @@ export const Main = () => {
       <button onClick={handleClick}>Get Weathers</button>
     </main>
   )
+}
+
+const digitCheck = (digitAmount:number, element: StateElement): StateElement => {
+    if(digitAmount === 5)
+    element = {
+      ...element,
+      type: ElementType.Zip
+    }
+  else 
+    element = {
+      ...element,
+      value: `Error ${element.value} zip code should have only 5 digits`,
+      type: ElementType.Error
+    }
+    return element
+}
+
+const errorTypeCheck = (letterAmount: number, digitAmount: number, element: StateElement): StateElement => {
+  if(letterAmount >= digitAmount) {
+    element = {
+      ...element,
+      value: `Error ${element.value} city name shouldn't include numbers`,
+      type: ElementType.Error 
+    }
+  }else {
+    element =  {
+      ...element,
+      value: `Error ${element.value} zip code shouldn't include letters`,
+      type: ElementType.Error 
+    }
+  }
+  return element
 }
 
 
@@ -70,35 +113,13 @@ export const sanitizeInput = (value: string): StateElement => {
 
     if(value.match(digitRegex)) {
       digitAmount = value.match(digitRegex)!.length
-      if(digitAmount < 6)
-        returnValue = {
-          ...returnValue,
-          type: ElementType.Zip
-        }
-      else 
-        returnValue = {
-          ...returnValue,
-          value: `Error ${returnValue.value} zip code can't be longer than 5 digits`,
-          type: ElementType.Error
-        }
-
     }
-      if(digitRegex.test(value) && letterRegex.test(value)){
-        
-        if(letterAmount >= digitAmount) {
-          returnValue = {
-            ...returnValue,
-            value: `Error ${returnValue.value} city name shouldn't include numbers`,
-            type: ElementType.Error 
-          }
-        }else {
-          returnValue =  {
-            ...returnValue,
-            value: `Error ${returnValue.value} zip code shouldn't include letters`,
-            type: ElementType.Error 
-          }
-        }
-      }
+    
+    if(digitRegex.test(value) && letterRegex.test(value)){
+      returnValue = errorTypeCheck(letterAmount, digitAmount, returnValue)
+    }else if(digitRegex.test(value)) {
+      returnValue = digitCheck(digitAmount, returnValue)
+    }
   }
   return returnValue
 }

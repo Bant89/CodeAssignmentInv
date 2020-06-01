@@ -8,5 +8,6 @@ export type StateElement = {
 export enum ElementType {
   Error = 'Error',
   Zip = 'Zip',
-  City = 'City'
+  City = 'City',
+  ApiError = 'ApiError'
 }
