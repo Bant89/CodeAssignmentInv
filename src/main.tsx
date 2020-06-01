@@ -1,26 +1,37 @@
 import React, { useState, FormEvent } from 'react'
 
 import { BASE_URL, API_KEY } from './utils/index'
-import { ErrorMessage } from './utils/types'
+import { StateElement, ElementType } from './utils/types'
 
 export const Main = () => {
   const [input, setInput] = useState('')
-  const [responses, setResponses] = useState<Array<{}>>([])
+  const [errors, setErrors] = useState<Array<StateElement>>([])
+  const [responses, setResponses] = useState<Array<StateElement>>([])
 
   const handleChange = (e: FormEvent<HTMLInputElement>) => {
     setInput(e.currentTarget.value)
   }
 
-  const makeRequest = (value: string) => {
-    fetch(`${BASE_URL}${value}${API_KEY}`)
+  const makeRequest = (element: StateElement) => {
+    fetch(`${BASE_URL}${element.value}${API_KEY}`)
       .then(res => res.json())
-      .then(data => setResponses(state => [...state, data]))
+      .then(data => setResponses(state => [...state, { ...element, data }]))
       .catch(error => console.error(error))
   }
 
   const handleClick = () => {
+    setResponses([])
+    setErrors([])
     input.split(',')
     .map(e => sanitizeInput(e))
+    .filter(e => {
+      if(e.type === ElementType.Error) {
+        setErrors(state => [...state, e])
+        return false
+      }else {
+        return true
+      }
+    })
     .forEach(e => makeRequest(e))
   }
 
@@ -34,22 +45,60 @@ export const Main = () => {
 }
 
 
-export const sanitizeInput = (value: string) => {
+export const sanitizeInput = (value: string): StateElement => {
   const letterRegex = /[A-Za-z]/g,
     digitRegex = /\d/g
 
-  let returnValue = value.trim()
-  if(returnValue.length === 0){
-    returnValue = "Value can't be empty"
-  }else if(digitRegex.test(value) && letterRegex.test(value)){
-    const letterAmount = value.match(letterRegex)!.length
-    const digitAmount = value.match(digitRegex)!.length
-    
-    if(letterAmount >= digitAmount) {
-      returnValue = "City name shouldn't include numbers"
-    }else {
-      returnValue = "Postal code should include letters"
+  let returnValue: StateElement = { value: value.trim(), data: {}, type: ElementType.City }
+
+  if(returnValue.value.length === 0){
+    returnValue = {
+      ...returnValue,
+      value: "Error value can't be empty",
+      type: ElementType.Error 
     }
+  }else {
+    let letterAmount = 0, digitAmount = 0
+
+    if(value.match(letterRegex)) {
+      letterAmount = value.match(letterRegex)!.length
+      returnValue = {
+        ...returnValue,
+        type: ElementType.City
+      }
+    }
+
+    if(value.match(digitRegex)) {
+      digitAmount = value.match(digitRegex)!.length
+      if(digitAmount < 6)
+        returnValue = {
+          ...returnValue,
+          type: ElementType.Zip
+        }
+      else 
+        returnValue = {
+          ...returnValue,
+          value: `Error ${returnValue.value} zip code can't be longer than 5 digits`,
+          type: ElementType.Error
+        }
+
+    }
+      if(digitRegex.test(value) && letterRegex.test(value)){
+        
+        if(letterAmount >= digitAmount) {
+          returnValue = {
+            ...returnValue,
+            value: `Error ${returnValue.value} city name shouldn't include numbers`,
+            type: ElementType.Error 
+          }
+        }else {
+          returnValue =  {
+            ...returnValue,
+            value: `Error ${returnValue.value} zip code shouldn't include letters`,
+            type: ElementType.Error 
+          }
+        }
+      }
   }
   return returnValue
 }

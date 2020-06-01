@@ -1,4 +1,12 @@
-export type ErrorMessage = {
-  message: string
-  code: string
+
+export type StateElement = {
+  value: string
+  data: object
+  type: ElementType
+}
+
+export enum ElementType {
+  Error = 'Error',
+  Zip = 'Zip',
+  City = 'City'
 }
